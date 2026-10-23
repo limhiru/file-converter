@@ -1,6 +1,5 @@
 import io
 import json
-from pathlib import Path
 import stat
 import subprocess
 import wave
@@ -28,7 +27,11 @@ def zip_bytes(entries):
     output = io.BytesIO()
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
         for name, content in entries:
-            archive.writestr(name, content)
+            # Preserve the exact archive name even on Windows, including malicious fixtures.
+            entry = zipfile.ZipInfo(name)
+            entry.filename = name
+            entry.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(entry, content)
     return output.getvalue()
 
 

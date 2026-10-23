@@ -126,11 +126,11 @@ def convert_image(data: bytes, filename: str, target: str, quality: int) -> Resu
     except (OSError, ValueError) as exc:
         raise ConversionError("이미지를 읽거나 변환할 수 없습니다. 파일이 손상되었을 수 있습니다.") from exc
     notes.append("이미지 메타데이터(EXIF/GPS 등)는 결과에 포함하지 않습니다.")
-    return Result(output.getvalue(), str(Path(filename).with_suffix(f".{target}")), MIME_TYPES[target], notes)
+    return Result(output.getvalue(), str(PurePosixPath(filename).with_suffix(f".{target}")), MIME_TYPES[target], notes)
 
 
 def convert_data(data: bytes, filename: str, target: str) -> Result:
-    suffix = Path(filename).suffix.lower().lstrip(".")
+    suffix = PurePosixPath(filename).suffix.lower().lstrip(".")
     if suffix not in DATA_FORMATS:
         raise UnsupportedFormat("데이터 변환은 CSV, TSV, JSON 파일을 지원합니다.")
     try:
@@ -174,18 +174,18 @@ def convert_data(data: bytes, filename: str, target: str) -> Result:
         if isinstance(exc, ConversionError):
             raise
         raise ConversionError("데이터 구문을 읽을 수 없습니다. CSV/TSV 또는 JSON 구조를 확인하세요.") from exc
-    return Result(output, str(Path(filename).with_suffix(f".{target}")), MIME_TYPES[target], notes)
+    return Result(output, str(PurePosixPath(filename).with_suffix(f".{target}")), MIME_TYPES[target], notes)
 
 
 def convert_media(data: bytes, filename: str, target: str, quality: int) -> Result:
-    if Path(filename).suffix.lower().lstrip(".") not in MEDIA_INPUTS:
+    if PurePosixPath(filename).suffix.lower().lstrip(".") not in MEDIA_INPUTS:
         raise UnsupportedFormat("지원하는 오디오·동영상 파일을 선택하세요.")
     binary = ffmpeg_binary()
     if not binary:
         raise ConversionError("FFmpeg 엔진이 없습니다. requirements.txt의 의존성을 설치하세요.")
     # Never interpolate user input in a shell command or let FFmpeg follow remote URLs/playlists.
     with tempfile.TemporaryDirectory(prefix="file-converter-") as folder:
-        source = Path(folder, "input" + Path(filename).suffix.lower())
+        source = Path(folder, "input" + PurePosixPath(filename).suffix.lower())
         output = Path(folder, "output." + target)
         source.write_bytes(data)
         command = [binary, "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-max_alloc", "268435456",
@@ -217,7 +217,7 @@ def convert_media(data: bytes, filename: str, target: str, quality: int) -> Resu
         if output.stat().st_size >= MAX_OUTPUT_BYTES:
             raise ConversionError("변환 결과가 100 MB를 초과했습니다. 더 작은 파일을 사용하세요.")
         result = output.read_bytes()
-    return Result(result, str(Path(filename).with_suffix(f".{target}")), MIME_TYPES[target],
+    return Result(result, str(PurePosixPath(filename).with_suffix(f".{target}")), MIME_TYPES[target],
                   ["미디어를 다시 인코딩하며, 원본 메타데이터는 결과에 포함하지 않습니다."])
 
 
@@ -242,6 +242,8 @@ def convert_archive(data: bytes, filename: str, target: str, quality: int) -> Re
         total = 0
         seen = set()
         for entry in entries:
+            # ZipInfo.filename normalizes backslashes on Windows. Inspect the raw name too.
+            _archive_name(entry.orig_filename)
             name = _archive_name(entry.filename)
             if name.casefold() in seen:
                 raise ConversionError("ZIP 안에 중복 경로가 있습니다.")
@@ -306,7 +308,7 @@ def convert_archive(data: bytes, filename: str, target: str, quality: int) -> Re
             raise ConversionError("ZIP 안에 선택한 형식으로 변환할 수 있는 파일이 없습니다.")
         if len(output.getvalue()) > MAX_OUTPUT_BYTES:
             raise ConversionError("ZIP 변환 결과가 100 MB를 초과합니다.")
-    return Result(output.getvalue(), Path(filename).stem + "-converted.zip", MIME_TYPES["zip"],
+    return Result(output.getvalue(), PurePosixPath(filename).stem + "-converted.zip", MIME_TYPES["zip"],
                   [f"{converted}개 변환, {skipped}개 원본 보존. ZIP 안의 conversion-report.json을 확인하세요."], converted, skipped)
 
 
@@ -341,7 +343,7 @@ def convert(data: bytes, filename: str, target: str, quality: int = 90) -> Resul
         raise ConversionError("파일 크기는 최대 100 MB까지 지원합니다.")
     if zipfile.is_zipfile(io.BytesIO(data)):
         # OOXML/EPUB are ZIP packages, not user archives that we should rewrite.
-        if Path(filename).suffix.lower() in (".docx", ".xlsx", ".pptx", ".odt", ".ods", ".epub"):
+        if PurePosixPath(filename).suffix.lower() in (".docx", ".xlsx", ".pptx", ".odt", ".ods", ".epub"):
             raise UnsupportedFormat("오피스 문서·전자책은 현재 지원하지 않습니다.")
         return convert_archive(data, filename, target, quality)
     if filename.lower().endswith(".zip"):
