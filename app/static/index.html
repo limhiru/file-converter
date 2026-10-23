@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="내 컴퓨터에서 이미지, 데이터, 오디오·동영상과 ZIP 안의 파일을 변환하세요.">
+  <meta name="theme-color" content="#245c45">
+  <title>파일 변환 — 파일의 다음 형태</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+  <script type="module" src="/static/app.js"></script>
+</head>
+<body>
+  <svg class="icon-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+    <symbol id="i-arrows" viewBox="0 0 24 24"><path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3v.1"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8l-5-5Z"/><path d="M14 3v5h5M8 13h8m-8 4h6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  </defs></svg>
+
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="파일 변환 홈"><span class="brand-icon"><svg><use href="#i-arrows"/></svg></span><span>파일 변환<small>FILE CONVERTER</small></span></a>
+    <span class="nav-label">WORKSPACE</span>
+    <nav aria-label="주 메뉴">
+      <button class="nav-item active" id="nav-convert"><svg><use href="#i-arrows"/></svg>파일 변환<span class="nav-dot"></span></button>
+      <button class="nav-item" id="nav-formats"><svg><use href="#i-grid"/></svg>지원 형식</button>
+      <button class="nav-item" id="nav-guide"><svg><use href="#i-help"/></svg>사용 가이드</button>
+    </nav>
+    <div class="local-card"><span class="local-orb"><svg><use href="#i-shield"/></svg></span><strong>내 컴퓨터 안에서만</strong><p>파일은 외부 서버로 전송되지 않습니다. 원본은 그대로 유지됩니다.</p><span class="local-label"><i></i>로컬 처리</span></div>
+    <div class="sidebar-footer"><span class="version">v1.0</span><a href="https://github.com/limhiru/file-converter" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div>
+  </aside>
+
+  <div class="shell">
+    <header class="topbar"><span>워크스페이스 <span class="breadcrumb">/</span> <strong>파일 변환</strong></span><span class="connection" id="connection"><i></i>엔진 연결 중</span></header>
+    <main>
+      <div class="page-heading"><div><div class="eyebrow">A NEW FORMAT, A FRESH START</div><h1>파일의 다음 형태를, 가볍게.</h1><p>필요한 형식을 고르고 변환하세요. 복잡한 과정은 여기서 끝.</p></div><span class="heading-stamp"><svg><use href="#i-arrows"/></svg></span></div>
+      <div class="workspace-grid">
+        <section class="workbench" aria-labelledby="workbench-title">
+          <div class="section-head"><h2 id="workbench-title">파일 변환</h2><span class="count-pill" id="queue-count">0개 파일</span></div>
+          <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="변환할 파일 선택 또는 끌어 놓기" aria-describedby="upload-limits">
+            <div class="paper-stack" aria-hidden="true"><span class="paper back">PNG</span><span class="paper front"><svg><use href="#i-arrows"/></svg><b>JPG</b></span></div>
+            <h3>파일을 여기로 끌어 놓으세요</h3><p>이미지부터 동영상까지, ZIP 파일도 한 번에.</p>
+            <span class="button primary pick-button"><svg><use href="#i-plus"/></svg>파일 선택</span>
+            <small id="upload-limits">파일당 최대 100 MB · 한 번에 최대 20개</small>
+            <input id="file-input" type="file" multiple hidden>
+          </div>
+
+          <div class="queue-heading"><h3>변환 목록 <span id="queue-total">0</span></h3><button id="clear-all" class="text-button" disabled>전체 지우기</button></div>
+          <div class="filters" role="group" aria-label="파일 종류 필터"><button data-filter="all" class="selected">전체</button><button data-filter="image">이미지</button><button data-filter="data">데이터</button><button data-filter="audio">오디오</button><button data-filter="video">동영상</button><button data-filter="archive">ZIP</button></div>
+          <div id="file-list" class="file-list" aria-live="polite"></div>
+          <div class="empty-state" id="empty-state"><span class="empty-icon"><svg><use href="#i-file"/></svg></span><p>아직 추가한 파일이 없어요</p><small>파일을 추가하면 이곳에서 변환할 수 있습니다.</small></div>
+          <div class="batch-footer"><div><strong id="batch-summary">준비된 파일이 없습니다</strong><span id="batch-detail">파일을 추가해 시작하세요.</span></div><button class="button primary" id="convert-all" disabled><svg><use href="#i-arrows"/></svg>모두 변환</button></div>
+          <div class="download-bar" id="download-bar" hidden><span><svg><use href="#i-check"/></svg><b id="completed-label">변환 완료</b></span><button class="button secondary" id="download-all"><svg><use href="#i-download"/></svg>결과 ZIP 받기</button></div>
+        </section>
+
+        <aside class="settings-column" aria-label="변환 설정">
+          <section class="settings-card"><div class="section-head"><h2>변환 설정</h2><span class="tiny-label">DEFAULT</span></div><p class="settings-intro">새로 추가할 파일의 기본 설정입니다.</p>
+            <label class="field-label" for="default-target">출력 형식</label><select id="default-target" disabled><option>불러오는 중…</option></select>
+            <div class="quality-label"><label class="field-label" for="quality">변환 품질</label><output id="quality-value" for="quality">90<span>%</span></output></div><input type="range" id="quality" min="10" max="100" value="90" step="5"><div class="range-labels"><span>작은 용량</span><span>높은 품질</span></div><p class="field-help">JPG·WebP·동영상에 적용됩니다. 파일별 출력 형식은 목록에서 바꿀 수 있어요.</p>
+            <button class="button outline" id="apply-settings" disabled>대기 중인 파일에 적용</button>
+            <div class="settings-note"><svg><use href="#i-shield"/></svg><span>원본 파일은 변경하지 않고<br>새 파일로 저장합니다.</span></div>
+          </section>
+          <section class="zip-card"><span class="zip-tag">ZIP 안의 파일도</span><h3>열고, 바꾸고, 다시 담고.</h3><p>ZIP을 추가하면 호환되는 내부 파일을 변환해 새 ZIP으로 묶어 드려요.</p><div class="zip-flow"><span>ZIP</span><svg><use href="#i-arrows"/></svg><span>JPG</span><span class="flow-plus">+</span><span>ZIP</span></div><small>변환하지 못한 파일은 원본을 보존하고, 결과 보고서를 함께 담습니다.</small></section>
+        </aside>
+      </div>
+      <div class="bottom-note"><svg><use href="#i-shield"/></svg>로그인 없이 · 외부 업로드 없이 · 원본 손상 없이<span>MADE FOR YOUR FILES.</span></div>
+    </main>
+    <footer class="page-footer"><span>파일 변환 <span class="footer-dot">·</span> 내 파일에 맞는 새로운 형식</span><button class="text-button" id="footer-formats">지원 형식 보기 ↗</button></footer>
+  </div>
+
+  <dialog id="info-dialog"><div class="dialog-head"><h2 id="dialog-title"></h2><button class="icon-button" id="close-dialog" aria-label="닫기"><svg><use href="#i-close"/></svg></button></div><div id="dialog-content"></div></dialog>
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
